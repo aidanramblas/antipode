@@ -119,6 +119,9 @@
                 <script>
                     document.addEventListener("DOMContentLoaded", () => {
                         const city = document.getElementById("wikiCityName")?.textContent?.trim();
+                        const inputCity = document.getElementById("wikiInputCity")?.textContent?.trim();
+
+                        function addWikiLink(cityName, elementId) {
                         if (!city) return;
 
                         const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(city)}&format=json&origin=*`;
@@ -138,7 +141,7 @@
                             .catch(err => {
                                 console.error("Wikipedia fetch error:", err);
                             });
-                    });
+                    }});
                 </script>
 
 
