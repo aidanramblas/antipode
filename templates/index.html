@@ -97,7 +97,10 @@
             {% else %}
                 <h3>Results:</h3>
                 <p><strong>Input Coordinates:</strong> {{ result.InputCoordinates }}</p>
-                <p><strong>Nearest City to Input:</strong> {{ result.NearestCityInput }}</p>
+                <p><strong>Nearest City to Input:</strong>
+                    <span id="wikiCityName">{{ result["NearestCityInput"] }}</span>, {{ result.InputCountry }}
+                    <span id="wikiLink"></span>
+                </p>
                 <p><strong>Antipode Coordinates:</strong> {{ result.Antipode }}</p>
                 <p><strong>Nearest City to Antipode:</strong>
                     <span id="wikiCityName">{{ result["Nearest City"] }}</span>, {{ result.Country }}
