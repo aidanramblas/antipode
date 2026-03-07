@@ -181,7 +181,8 @@
                         .pointLabel('label')
                         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                         .backgroundColor('#000');
-                    setTimeout(() => globe.width(document.getElementById('globeViz').clientWidth), 100);
+                    
+                    requestAnimationFrame(() => globe.controls().update());
 
                     // Fix canvas sizing to fit container
                     const globeCanvas = document.querySelector('#globeViz canvas');
@@ -190,8 +191,8 @@
                         globeCanvas.style.left = '0';
                         globeCanvas.style.top = '0';
                         globeCanvas.style.transform = 'none';
-                        //globeCanvas.style.width = '100%';
-                        //globeCanvas.style.height = '600px';
+                        globeCanvas.style.width = '100%';
+                        globeCanvas.style.height = '600px';
                         globeCanvas.style.maxWidth = '100%';
                         globeCanvas.style.display = 'block';
                         globeCanvas.style.margin = '0 auto';
