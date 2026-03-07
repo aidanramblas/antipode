@@ -65,15 +65,9 @@ def antipode_func(string):
     antipode_lat = -home_lat
     
     if home_long >= 0:
-        antipode_long = 180 - home_long
-    else: 
-        antipode_long = 180 + home_long
-    
-    
-    if antipode_long > 180:
-        antipode_long -= 360
-    elif antipode_long < -180:
-        antipode_long += 360
+        antipode_long = home_long - 180
+    else:
+        antipode_long = home_long + 180
     
     #print(f"Input coordinates: {home_coords}, Antipode coordinates: {antipode_lat, antipode_long}")
     return antipode_lat, antipode_long
