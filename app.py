@@ -136,7 +136,8 @@ def index():
                 "InputCoordinates": coords.strip(),
                 
                 # Nearest city to input
-                "NearestCityInput": f"{input_city['Nearest City']}, {input_city['Country']}",
+                "NearestCityInput": input_city['Nearest City'],
+                "Input_Country": input_city["Country"],
                 
                 # Nearest city to antipode info (rename distance key to 'Distance')
                 "Nearest City": antipode_city["Nearest City"],
