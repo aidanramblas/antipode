@@ -137,7 +137,7 @@ def index():
                 
                 # Nearest city to input
                 "NearestCityInput": input_city['Nearest City'],
-                "Input_Country": input_city["Country"],
+                "InputCountry": input_city["Country"],
                 
                 # Nearest city to antipode info (rename distance key to 'Distance')
                 "Nearest City": antipode_city["Nearest City"],
