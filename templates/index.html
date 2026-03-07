@@ -98,8 +98,8 @@
                 <h3>Results:</h3>
                 <p><strong>Input Coordinates:</strong> {{ result.InputCoordinates }}</p>
                 <p><strong>Nearest City to Input:</strong>
-                    <span id="wikiCityName">{{ result["NearestCityInput"] }}</span>, {{ result.InputCountry }}
-                    <span id="wikiLink"></span>
+                    <span id="wikiInputCity">{{ result["NearestCityInput"] }}</span>, {{ result.InputCountry }}
+                    <span id="wikiInputLink"></span>
                 </p>
                 <p><strong>Antipode Coordinates:</strong> {{ result.Antipode }}</p>
                 <p><strong>Nearest City to Antipode:</strong>
@@ -117,32 +117,36 @@
                 </div>
 
                 <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                        const city = document.getElementById("wikiCityName")?.textContent?.trim();
-                        const inputCity = document.getElementById("wikiInputCity")?.textContent?.trim();
+document.addEventListener("DOMContentLoaded", () => {
+    const city = document.getElementById("wikiCityName")?.textContent?.trim();
+    const inputCity = document.getElementById("wikiInputCity")?.textContent?.trim();
 
-                        function addWikiLink(cityName, elementId) {
-                        if (!city) return;
+    function addWikiLink(cityName, elementId) {
+        if (!cityName) return;
 
-                        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(city)}&format=json&origin=*`;
+        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cityName)}&format=json&origin=*`;
 
-                        fetch(url)
-                            .then(res => res.json())
-                            .then(data => {
-                                const results = data.query?.search;
-                                if (results && results.length > 0) {
-                                    const title = results[0].title;
-                                    const link = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const results = data.query?.search;
+                if (results && results.length > 0) {
+                    const title = results[0].title;
+                    const link = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
 
-                                    document.getElementById("wikiLink").innerHTML = 
-                                        ` — <a href="${link}" target="_blank">(Wikipedia)</a>`;
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Wikipedia fetch error:", err);
-                            });
-                    }});
-                </script>
+                    document.getElementById(elementId).innerHTML =
+                        ` — <a href="${link}" target="_blank">(Wikipedia)</a>`;
+                }
+            })
+            .catch(err => {
+                console.error("Wikipedia fetch error:", err);
+            });
+    }
+
+    addWikiLink(city, "wikiLink");
+    addWikiLink(inputCity, "wikiInputLink");
+});
+</script>
 
 
                 <script>
