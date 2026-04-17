@@ -75,8 +75,9 @@
         }
 
     </style>
-    <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
-    <script src="https://unpkg.com/globe.gl"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/globe.gl@2.45.0"></script>
+
 </head>
 <body>
     <h2>Input Coordinates to find Antipode and Nearest Cities</h2>
@@ -182,15 +183,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     ];
 
-                    const Globe = window.Globe;
-                    const globe = Globe()(document.getElementById('globeViz'))
-                        .pointOfView({ lat: 0, lng: 0, altitude: 2 })
-                        .pointsData(pointsData)
-                        .pointAltitude('size')
-                        .pointColor('color')
-                        .pointLabel('label')
-                        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-                        .backgroundColor('#000');
+                    
+                    const globe = new Globe(document.getElementById('globeViz'))
+    .pointOfView({ lat: 0, lng: 0, altitude: 2 })
+    .pointsData(pointsData)
+    .pointAltitude('size')
+    .pointColor('color')
+    .pointLabel('label')
+    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+    .backgroundColor('#000');
 
                     // Fix canvas sizing to fit container
                     const globeCanvas = document.querySelector('#globeViz canvas');
