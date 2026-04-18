@@ -29,26 +29,31 @@
       padding: 3px;
       color: white;
     }
-        input[type="text"] {
+    input[type="text"] {
             width: 97.5%;
             padding: 0.5rem;
             margin-top: 0.5rem;
         }
-        button {
+    button {
             padding: 0.5rem 1rem;
             margin-top: 0.5rem;
         }
-        .result {
+    .result {
             background: white;
             padding: 1rem;
             border-radius: 8px;
         }
 
-        .globe-container {
+    .globe-container {
             max-width: 800px;
             width: 100%;
             overflow: hidden;
             margin: 1rem auto 0;
+        }
+
+        #globeModeToggle {
+            padding: 0.6rem 1.2rem;
+            margin-bottom: 0.75rem;
         }
 
         #globeViz {
@@ -77,12 +82,13 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/globe.gl@2.45.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 
 </head>
 <body>
     <h2>Input Coordinates to find Antipode and Nearest Cities</h2>
     <form method="post">
-        <label for="coords">Enter coordinates (ie., 37.872 N, 122.273 W <b>or</b> 37.872, -122.273):</label><br>
+        <label for="coords">Enter coordinates (ie., 37.872, -122.273 <b>or</b> 37.872 N, 122.273 W):</label><br>
         <input type="text" name="coords" required>
         <br>
         <button type="submit">Find</button>
@@ -114,6 +120,7 @@
                 {% endif %}
 
                 <div class="globe-container">
+                    <button type="button" id="globeModeToggle">Switch to hollow globe</button>
                     <div id="globeViz"></div>
                 </div>
 
@@ -150,63 +157,163 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 
-                <script>
-                    // Prepare points data for globe: antipode city, antipode, input coords, input city
-                    const pointsData = [
-                        {
-                            lat: parseFloat("{{ result.Latitude }}"),
-                            lng: parseFloat("{{ result.Longitude }}"),
-                            size: 0.5,
-                            color: 'red',
-                            label: 'Nearest City to Antipode'
-                        },
-                        {
-                            lat: parseFloat("{{ result.Antipode.split(',')[0] | trim }}"),
-                            lng: parseFloat("{{ result.Antipode.split(',')[1] | trim }}"),
-                            size: 0.5,
-                            color: 'blue',
-                            label: 'Antipode'
-                        },
-                        {
-                            lat: parseFloat("{{ result.InputCoordinates.split(',')[0] | trim }}"),
-                            lng: parseFloat("{{ result.InputCoordinates.split(',')[1] | trim }}"),
-                            size: 0.5,
-                            color: 'blue',
-                            label: 'Input Coordinates'
-                        },
-                        {
-                            //lat: parseFloat("{{ result.InputCityLat }}"),
-                            //lng: parseFloat("{{ result.InputCityLong }}"),
-                            //size: 0.5,
-                            //color: 'green',
-                            //label: 'Nearest City to Input'
-                        }
-                    ];
+                <script type="module">
+    import * as THREE from 'https://esm.sh/three';
 
-                    
-                    const globe = new Globe(document.getElementById('globeViz'))
-    .pointOfView({ lat: 0, lng: 0, altitude: 2 })
-    .pointsData(pointsData)
-    .pointAltitude('size')
-    .pointColor('color')
-    .pointLabel('label')
-    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-    .backgroundColor('#000');
+    const inputLat = parseFloat("{{ result.InputCoordinates.split(',')[0] | trim }}");
+    const inputLng = parseFloat("{{ result.InputCoordinates.split(',')[1] | trim }}");
+    const antipodeLat = parseFloat("{{ result.Antipode.split(',')[0] | trim }}");
+    const antipodeLng = parseFloat("{{ result.Antipode.split(',')[1] | trim }}");
 
-                    // Fix canvas sizing to fit container
-                    const globeCanvas = document.querySelector('#globeViz canvas');
-                    if (globeCanvas) {
-                        globeCanvas.style.position = 'relative';
-                        globeCanvas.style.left = '0';
-                        globeCanvas.style.top = '0';
-                        globeCanvas.style.transform = 'none';
-                        globeCanvas.style.width = '100%';
-                        globeCanvas.style.height = '600px';
-                        globeCanvas.style.maxWidth = '100%';
-                        globeCanvas.style.display = 'block';
-                        globeCanvas.style.margin = '0 auto';
-                    }
-                </script>
+    const normalPointsData = [
+        {
+            id: 'antipode-city',
+            lat: parseFloat("{{ result.Latitude }}"),
+            lng: parseFloat("{{ result.Longitude }}"),
+            size: 0.5,
+            color: 'red',
+            label: 'Nearest City to Antipode'
+        },
+        {
+            id: 'antipode',
+            lat: antipodeLat,
+            lng: antipodeLng,
+            size: 0.5,
+            color: 'blue',
+            label: 'Antipode'
+        },
+        {
+            id: 'input',
+            lat: inputLat,
+            lng: inputLng,
+            size: 0.5,
+            color: 'blue',
+            label: 'Input Coordinates'
+        }
+    ];
+
+    const hollowPointsData = [
+        {
+            id: 'antipode-city',
+            lat: parseFloat("{{ result.Latitude }}"),
+            lng: parseFloat("{{ result.Longitude }}"),
+            size: 0.5,
+            color: 'red',
+            label: 'Nearest City to Antipode'
+        }
+    ];
+
+    const globeEl = document.getElementById('globeViz');
+    const toggleBtn = document.getElementById('globeModeToggle');
+
+    const globe = new Globe(globeEl)
+        .pointOfView({ lat: 0, lng: 0, altitude: 2 })
+        .pointsData(normalPointsData)
+        .pointAltitude(d => d.size)
+        .pointColor('color')
+        .pointLabel('label')
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .backgroundColor('#000');
+
+    let isHollow = false;
+    let landFeatures = null;
+
+    async function loadLand() {
+        if (landFeatures) return landFeatures;
+
+        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas/land-110m.json');
+        const topo = await res.json();
+        landFeatures = topojson.feature(topo, topo.objects.land).features;
+        return landFeatures;
+    }
+
+    function buildTunnel() {
+        const start = globe.getCoords(inputLat, inputLng, 0);
+        const end = globe.getCoords(antipodeLat, antipodeLng, 0);
+
+        const startVec = new THREE.Vector3(start.x, start.y, start.z);
+        const endVec = new THREE.Vector3(end.x, end.y, end.z);
+        const mid = new THREE.Vector3().addVectors(startVec, endVec).multiplyScalar(0.5);
+        const dir = new THREE.Vector3().subVectors(endVec, startVec);
+        const length = dir.length();
+
+        const geometry = new THREE.CylinderGeometry(0.5, 0.5, length, 16);
+        const material = new THREE.MeshBasicMaterial({ color: 'blue' });
+        const cylinder = new THREE.Mesh(geometry, material);
+
+        cylinder.position.copy(mid);
+        cylinder.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            dir.clone().normalize()
+        );
+
+        return cylinder;
+    }
+
+    async function setHollow() {
+    const pov = globe.pointOfView();
+    const features = await loadLand();
+
+    globe
+        // keep ALL original points
+        .pointsData(normalPointsData)
+
+        // add tunnel on top
+        .customLayerData([{ id: 'input-tunnel' }])
+        .customThreeObject(() => buildTunnel())
+
+        .showGlobe(false)
+        .showAtmosphere(false)
+        .backgroundColor('rgba(0,0,0,0)')
+        .polygonsData(features)
+        .polygonCapColor(() => 'darkslategrey')
+        .polygonSideColor(() => 'rgba(0,0,0,0)')
+        .polygonStrokeColor(() => 'rgba(0,0,0,0)')
+        .pointOfView(pov);
+
+    isHollow = true;
+    toggleBtn.textContent = 'Fill globe';
+}
+
+    function setNormal() {
+        const pov = globe.pointOfView();
+
+        globe
+            .pointsData(normalPointsData)
+            .customLayerData([])
+            .customThreeObject(null)
+            .polygonsData([])
+            .showGlobe(true)
+            .showAtmosphere(true)
+            .backgroundColor('#000')
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+            .pointOfView(pov);
+
+        isHollow = false;
+        toggleBtn.textContent = 'Hollow globe';
+    }
+
+    toggleBtn.addEventListener('click', async () => {
+        if (isHollow) {
+            setNormal();
+        } else {
+            await setHollow();
+        }
+    });
+
+    const globeCanvas = document.querySelector('#globeViz canvas');
+    if (globeCanvas) {
+        globeCanvas.style.position = 'relative';
+        globeCanvas.style.left = '0';
+        globeCanvas.style.top = '0';
+        globeCanvas.style.transform = 'none';
+        globeCanvas.style.width = '100%';
+        globeCanvas.style.height = '600px';
+        globeCanvas.style.maxWidth = '100%';
+        globeCanvas.style.display = 'block';
+        globeCanvas.style.margin = '0 auto';
+    }
+</script>
             {% endif %}
         </div>
     {% endif %}
