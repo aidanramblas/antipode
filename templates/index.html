@@ -127,33 +127,39 @@
 
                 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const city = document.getElementById("wikiCityName")?.textContent?.trim();
-    const inputCity = document.getElementById("wikiInputCity")?.textContent?.trim();
+    function addWikiLink(cityName, countryName, elementId) {
+        if (!cityName || !countryName) return;
 
-    function addWikiLink(cityName, elementId) {
-        if (!cityName) return;
+        const query = `${cityName}, ${countryName}`;
+        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
 
-        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cityName)}&format=json&origin=*`;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const results = data.query?.search;
+                if (results && results.length > 0) {
+                    const title = results[0].title;
+                    const link = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+                    const el = document.getElementById(elementId);
+                    if (el) {
+                        el.innerHTML = ` — <a href="${link}" target="_blank" rel="noopener noreferrer">(Wikipedia)</a>`;
+                    }
+                }
+            })
+            .catch(err => console.error("Wikipedia fetch error:", err));
+    }
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                const results = data.query?.search;
-                if (results && results.length > 0) {
-                    const title = results[0].title;
-                    const link = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+    addWikiLink(
+        "{{ result['Nearest City'] }}",
+        "{{ result.Country }}",
+        "wikiLink"
+    );
 
-                    document.getElementById(elementId).innerHTML =
-                        ` — <a href="${link}" target="_blank">(Wikipedia)</a>`;
-                }
-            })
-            .catch(err => {
-                console.error("Wikipedia fetch error:", err);
-            });
-    }
-
-    addWikiLink(city, "wikiLink");
-    addWikiLink(inputCity, "wikiInputLink");
+    addWikiLink(
+        "{{ result.NearestCityInput }}",
+        "{{ result.InputCountry }}",
+        "wikiInputLink"
+    );
 });
 </script>
 
