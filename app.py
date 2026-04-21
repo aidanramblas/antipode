@@ -97,6 +97,11 @@ def random_coords():
 
     return f"{lat:.4f}, {lon:.4f}"
 
+def random_city_coords():
+    eligible = cities[cities["Population"] >= 1000]
+    row = eligible.sample(n=1).iloc[0]
+    return f"{row['lat']:.4f}, {row['lon']:.4f}"
+
 def final(string):
     input_coords = string
     antipode_coords = antipode_func(string)
@@ -127,7 +132,14 @@ def index():
     result = None
     if request.method == "POST":
         action = request.form.get("action")
-        coords = random_coords() if action == "random" else request.form["coords"]
+
+        if action == "random":
+            coords = random_coords()
+        elif action == "random_city":
+            coords = random_city_coords()
+        else:
+            coords = request.form["coords"]
+
         if action != "random" and not coords.strip():
             return render_template("index.html", result={"error": "Please enter coordinates."})
         try:
