@@ -5,6 +5,7 @@ from sklearn.neighbors import BallTree
 import re
 import logging
 import random
+import math
 
 
 logging.basicConfig(filename='flask_error.log', level=logging.DEBUG)
@@ -90,11 +91,9 @@ def find_nearest_city(lat, lon):
     }
 
 def random_coords():
-    lat = random.gauss(0, 50)
-    lon = random.gauss(0, 90)
-
-    lat = max(-90, min(90, lat))
-    lon = max(-180, min(180, lon))
+    u = random.uniform(-1, 1)
+    lat = math.degrees(math.asin(u))
+    lon = random.uniform(-180, 180)
 
     return f"{lat:.4f}, {lon:.4f}"
 
