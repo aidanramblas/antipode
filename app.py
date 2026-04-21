@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.neighbors import BallTree
 import re
 import logging
+import random
 
 
 logging.basicConfig(filename='flask_error.log', level=logging.DEBUG)
@@ -88,6 +89,15 @@ def find_nearest_city(lat, lon):
         'Distance from antipode (km)': round(distance_km, 2)
     }
 
+def random_coords():
+    lat = random.gauss(0, 50)
+    lon = random.gauss(0, 90)
+
+    lat = max(-90, min(90, lat))
+    lon = max(-180, min(180, lon))
+
+    return f"{lat:.4f}, {lon:.4f}"
+
 def final(string):
     input_coords = string
     antipode_coords = antipode_func(string)
@@ -117,7 +127,10 @@ def final(string):
 def index():
     result = None
     if request.method == "POST":
-        coords = request.form["coords"]
+        action = request.form.get("action")
+        coords = random_coords() if action == "random" else request.form["coords"]
+        if action != "random" and not coords.strip():
+            return render_template("index.html", result={"error": "Please enter coordinates."})
         try:
             # Get antipode coords
             anti_lat, anti_lon = antipode_func(coords)
@@ -134,24 +147,33 @@ def index():
             result = {
                 # Input coordinates as entered by user (string)
                 "InputCoordinates": coords.strip(),
-                
+
+                # Raw numeric input coordinates for globe logic
+                "InputLat": input_lat,
+                "InputLng": input_lon,
+
+                # Raw numeric antipode coordinates for globe logic
+                "AntipodeLat": anti_lat,
+                "AntipodeLng": anti_lon,
+    
                 # Nearest city to input
                 "NearestCityInput": input_city['Nearest City'],
                 "InputCountry": input_city["Country"],
                 "InputCityLat": input_city["Latitude"],
                 "InputCityLong": input_city["Longitude"],
-                
-                # Nearest city to antipode info (rename distance key to 'Distance')
+    
+                # Nearest city to antipode info
                 "Nearest City": antipode_city["Nearest City"],
                 "Country": antipode_city["Country"],
                 "Latitude": antipode_city["Latitude"],
                 "Longitude": antipode_city["Longitude"],
                 "Distance": antipode_city["Distance from antipode (km)"],
-                
+    
                 "Population": antipode_city.get("Population", None),
-                # Antipode coordinates string
+
+                # Display string for humans
                 "Antipode": antipode_city["Antipode"]
-            }
+                }
             
         except Exception as e:
             result = {"error": str(e)}
