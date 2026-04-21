@@ -89,9 +89,10 @@
     <h2>Input Coordinates to find Antipode and Nearest Cities</h2>
     <form method="post">
         <label for="coords">Enter coordinates (ie., 37.872, -122.273 <b>or</b> 37.872 N, 122.273 W):</label><br>
-        <input type="text" name="coords" required>
+        <input type="text" name="coords">
         <br>
-        <button type="submit">Find</button>
+        <button type="submit" name="action" value="find">Find</button>
+        <button type="submit" name="action" value="random">Random coordinates</button>
     </form>
 
     {% if result %}
@@ -160,10 +161,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 <script type="module">
     import * as THREE from 'https://esm.sh/three';
 
-    const inputLat = parseFloat("{{ result.InputCoordinates.split(',')[0] | trim }}");
-    const inputLng = parseFloat("{{ result.InputCoordinates.split(',')[1] | trim }}");
-    const antipodeLat = parseFloat("{{ result.Antipode.split(',')[0] | trim }}");
-    const antipodeLng = parseFloat("{{ result.Antipode.split(',')[1] | trim }}");
+    const inputLat = parseFloat("{{ result.InputLat }}");
+    const inputLng = parseFloat("{{ result.InputLng }}");
+    const antipodeLat = parseFloat("{{ result.AntipodeLat }}");
+    const antipodeLng = parseFloat("{{ result.AntipodeLng }}");
+
+    if ([inputLat, inputLng, antipodeLat, antipodeLng].some(Number.isNaN)) {
+        throw new Error("Invalid numeric coordinates for globe rendering.");
+    }
 
     const normalPointsData = [
         {
